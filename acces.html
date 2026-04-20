@@ -125,17 +125,23 @@ window.verifierCode = async function() {
     }
 
     // ── Enregistrer l'appareil s'il est nouveau ──
-    if (!dejaConnu) {
-      await updateDoc(licRef, {
-        appareils: arrayUnion(deviceId),
-        nbAppareils: nbAppareils + 1,
-        derniereConnexion: new Date().toISOString()
-      });
-    } else {
-      // Mise à jour dernière connexion uniquement
-      await updateDoc(licRef, {
-        derniereConnexion: new Date().toISOString()
-      });
+    try {
+      if (!dejaConnu) {
+        await updateDoc(licRef, {
+          appareils: arrayUnion(deviceId),
+          nbAppareils: nbAppareils + 1,
+          derniereConnexion: new Date().toISOString()
+        });
+      } else {
+        // Mise à jour dernière connexion uniquement
+        await updateDoc(licRef, {
+          derniereConnexion: new Date().toISOString()
+        });
+      }
+    } catch (updateErr) {
+      // Si la mise à jour échoue (règles Firestore), on laisse quand même passer
+      // la licence est valide, on continue vers l'accès
+      console.warn('Mise à jour appareil échouée (règles Firestore) :', updateErr.message);
     }
 
     // ── ✅ ACCÈS ACCORDÉ ──
